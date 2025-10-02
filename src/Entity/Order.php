@@ -24,8 +24,8 @@ class Order
     #[ORM\Column(length: 255)]
     private ?string $customer_email = null;
 
-    #[ORM\Column(type: Types::SMALLINT)]
-    private ?int $total_amount = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $total_amount = null;
 
     #[ORM\Column(type: Types::STRING, enumType: OrderStatus::class)]
     private ?OrderStatus $status = null;
@@ -39,7 +39,7 @@ class Order
     /**
      * @var Collection<int, OrderItem>
      */
-    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order_id')]
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order')]
     private Collection $orderItems;
 
     public function __construct()
