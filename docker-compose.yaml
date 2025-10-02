@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:18.0-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: OMS_DB
+      POSTGRES_USER: oms_admin
+      POSTGRES_PASSWORD: oms_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
