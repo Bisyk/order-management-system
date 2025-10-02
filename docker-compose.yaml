@@ -1,0 +1,39 @@
+services:
+  ###> doctrine/doctrine-bundle ###
+  database:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: order_management
+      # You should definitely change the password in production
+      POSTGRES_PASSWORD: secure_password123
+      POSTGRES_USER: order_user
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "order_management", "-U", "order_user"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+      # - ./docker/db/data:/var/lib/postgresql/data:rw
+  ###< doctrine/doctrine-bundle ###
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://order_user:secure_password123@database:5432/order_management?serverVersion=18&charset=utf8"
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+
+volumes:
+  ###> doctrine/doctrine-bundle ###
+  database_data:
+###< doctrine/doctrine-bundle ###
