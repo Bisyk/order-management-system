@@ -39,7 +39,7 @@ class Order
     /**
      * @var Collection<int, OrderItem>
      */
-    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order')]
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist'])]
     private Collection $orderItems;
 
     public function __construct()
@@ -76,12 +76,12 @@ class Order
         return $this;
     }
 
-    public function getTotalAmount(): ?int
+    public function getTotalAmount(): ?string
     {
         return $this->total_amount;
     }
 
-    public function setTotalAmount(int $total_amount): static
+    public function setTotalAmount(string $total_amount): static
     {
         $this->total_amount = $total_amount;
 
@@ -136,7 +136,7 @@ class Order
     {
         if (!$this->orderItems->contains($orderItem)) {
             $this->orderItems->add($orderItem);
-            $orderItem->setOrderId($this);
+            $orderItem->setOrder($this);
         }
 
         return $this;
@@ -146,8 +146,8 @@ class Order
     {
         if ($this->orderItems->removeElement($orderItem)) {
             // set the owning side to null (unless already changed)
-            if ($orderItem->getOrderId() === $this) {
-                $orderItem->setOrderId(null);
+            if ($orderItem->getOrder() === $this) {
+                $orderItem->setOrder(null);
             }
         }
 

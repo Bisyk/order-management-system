@@ -14,9 +14,9 @@ class OrderItem
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Order::class, inversedBy: 'orderItems')]
-    #[ORM\JoinColumn(name: 'order_id', nullable: false)]
-    private ?Order $order_id = null;
+    #[ORM\ManyToOne(inversedBy: 'orderItems')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Order $order = null;
 
     #[ORM\Column(length: 255)]
     private ?string $product_name = null;
@@ -32,14 +32,14 @@ class OrderItem
         return $this->id;
     }
 
-    public function getOrderId(): ?order
+    public function getOrder(): ?Order
     {
-        return $this->order_id;
+        return $this->order;
     }
 
-    public function setOrderId(?order $order_id): static
+    public function setOrder(?Order $order): static
     {
-        $this->order_id = $order_id;
+        $this->order = $order;
 
         return $this;
     }
