@@ -38,4 +38,16 @@ class OrdersController
 
     return new JsonResponse(['message' => 'Order created'], JsonResponse::HTTP_CREATED);
   }
+
+  #[Route('/api/orders/{id}', name: 'app_api_orders_get_id', methods: ['GET'])]
+  public function show(int $id): JsonResponse
+  {
+    $order = $this->ordersService->getById($id);
+
+    if (!$order) {
+      return new JsonResponse(['message' => 'Order not found'], JsonResponse::HTTP_NOT_FOUND);
+    }
+
+    return new JsonResponse($order);
+  }
 }

@@ -3,10 +3,10 @@
 namespace App\Service;
 
 use App\Entity\Order;
+use App\Entity\OrderItem;
 use App\Enum\OrderStatus;
 use App\Repository\OrderRepository;
 use App\DTO\CreateOrderRequest;
-use App\Entity\OrderItem;
 
 class OrdersService
 {
@@ -38,20 +38,52 @@ class OrdersService
   public function get(): array
   {
     $orders = $this->orderRepository->findAll();
-    $orderData = [];
+    return array_map(
+      fn(Order $order) => $this->serializeOrder($order, false),
+      $orders
+    );
+  }
 
-    foreach ($orders as $order) {
-      $orderData[] = [
-        'id' => $order->getId(),
-        'customer_name' => $order->getCustomerName(),
-        'customer_email' => $order->getCustomerEmail(),
-        'total_amount' => $order->getTotalAmount(),
-        'status' => $order->getStatus()->value,
-        'created_at' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
-        'updated_at' => $order->getUpdatedAt()->format('Y-m-d H:i:s'),
-      ];
+  public function getById(int $id): ?array
+  {
+    $order = $this->orderRepository->find($id);
+
+    if (!$order) {
+      return null;
+    }
+
+    return $this->serializeOrder($order, true);
+  }
+
+  private function serializeOrder(Order $order, bool $includeItems = false): array
+  {
+    $orderData = [
+      'id' => $order->getId(),
+      'customer_name' => $order->getCustomerName(),
+      'customer_email' => $order->getCustomerEmail(),
+      'total_amount' => $order->getTotalAmount(),
+      'status' => $order->getStatus()->value,
+      'created_at' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+      'updated_at' => $order->getUpdatedAt()->format('Y-m-d H:i:s'),
+    ];
+
+    if ($includeItems) {
+      $orderData['order_items'] = array_map(
+        fn(OrderItem $item) => $this->serializeOrderItem($item),
+        $order->getOrderItems()->toArray()
+      );
     }
 
     return $orderData;
+  }
+
+  private function serializeOrderItem(OrderItem $item): array
+  {
+    return [
+      'id' => $item->getId(),
+      'product_name' => $item->getProductName(),
+      'quantity' => $item->getQuantity(),
+      'price' => $item->getPrice(),
+    ];
   }
 }
