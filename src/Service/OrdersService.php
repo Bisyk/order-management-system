@@ -55,6 +55,15 @@ class OrdersService
     return $this->serializeOrder($order, true);
   }
 
+  public function delete(int $id): void
+  {
+    $order = $this->orderRepository->find($id);
+
+    if ($order) {
+      $this->orderRepository->remove($id, true);
+    }
+  }
+
   private function serializeOrder(Order $order, bool $includeItems = false): array
   {
     $orderData = [

@@ -22,7 +22,7 @@ class OrdersController
   {
     $orders = $this->ordersService->get();
 
-    return new JsonResponse($orders);
+    return new JsonResponse($orders, JsonResponse::HTTP_OK);
   }
 
   #[Route('/api/orders', name: 'app_api_orders_create', methods: ['POST'])]
@@ -48,6 +48,14 @@ class OrdersController
       return new JsonResponse(['message' => 'Order not found'], JsonResponse::HTTP_NOT_FOUND);
     }
 
-    return new JsonResponse($order);
+    return new JsonResponse($order, JsonResponse::HTTP_OK);
+  }
+
+  #[Route('/api/orders/{id}', name: 'app_api_orders_delete', methods: ['DELETE'])]
+  public function delete(int $id): JsonResponse
+  {
+    $this->ordersService->delete($id);
+
+    return new JsonResponse(['message' => 'Order deleted'], JsonResponse::HTTP_OK);
   }
 }

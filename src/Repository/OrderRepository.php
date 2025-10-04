@@ -25,6 +25,17 @@ class OrderRepository extends ServiceEntityRepository
         }
     }
 
+    public function remove(int $id, bool $flush = false): void
+    {
+        $entity = $this->find($id);
+        if ($entity) {
+            $this->getEntityManager()->remove($entity);
+            if ($flush) {
+                $this->getEntityManager()->flush();
+            }
+        }
+    }
+
     //    /**
     //     * @return Order[] Returns an array of Order objects
     //     */
