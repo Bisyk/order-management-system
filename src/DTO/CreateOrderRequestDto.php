@@ -5,7 +5,7 @@ namespace App\DTO;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
-class CreateOrderRequest
+class CreateOrderRequestDto
 {
   #[Assert\NotBlank]
   public string $customer_name;

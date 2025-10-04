@@ -3,7 +3,8 @@
 namespace App\Controller;
 
 use App\Service\OrdersService;
-use App\DTO\CreateOrderRequest;
+use App\DTO\CreateOrderRequestDto;
+use App\DTO\UpdateStatusDto;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
@@ -26,7 +27,7 @@ class OrdersController
   }
 
   #[Route('/api/orders', name: 'app_api_orders_create', methods: ['POST'])]
-  public function create(#[MapRequestPayload()] CreateOrderRequest $orderData): JsonResponse
+  public function create(#[MapRequestPayload()] CreateOrderRequestDto $orderData): JsonResponse
   {
     $errors = $this->validator->validate($orderData);
 
@@ -57,5 +58,23 @@ class OrdersController
     $this->ordersService->delete($id);
 
     return new JsonResponse(['message' => 'Order deleted'], JsonResponse::HTTP_OK);
+  }
+
+  #[Route('/api/orders/{id}/status', name: 'app_api_orders_update_status', methods: ['PATCH'])]
+  public function update(int $id, #[MapRequestPayload()] UpdateStatusDto $statusDto): JsonResponse
+  {
+    $errors = $this->validator->validate($statusDto);
+
+    if (count($errors) > 0) {
+      throw new ValidationFailedException($statusDto, $errors);
+    }
+
+    $updatedOrder = $this->ordersService->updateStatus($id, $statusDto);
+
+    if (!$updatedOrder) {
+      return new JsonResponse(['message' => 'Order not found'], JsonResponse::HTTP_NOT_FOUND);
+    }
+
+    return new JsonResponse($updatedOrder, JsonResponse::HTTP_OK);
   }
 }

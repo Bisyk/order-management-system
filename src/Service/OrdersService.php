@@ -6,7 +6,8 @@ use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Enum\OrderStatus;
 use App\Repository\OrderRepository;
-use App\DTO\CreateOrderRequest;
+use App\DTO\CreateOrderRequestDto;
+use App\DTO\UpdateStatusDto;
 
 class OrdersService
 {
@@ -14,7 +15,7 @@ class OrdersService
     private readonly OrderRepository $orderRepository
   ) {}
 
-  public function create(CreateOrderRequest $orderData): void
+  public function create(CreateOrderRequestDto $orderData): void
   {
     $order = new Order();
     $order->setCustomerName($orderData->customer_name);
@@ -62,6 +63,21 @@ class OrdersService
     if ($order) {
       $this->orderRepository->remove($id, true);
     }
+  }
+
+  public function updateStatus(int $id, UpdateStatusDto $statusDto): ?array
+  {
+    $order = $this->orderRepository->find($id);
+
+    if (!$order) {
+      return null;
+    }
+
+    $order->setStatus(OrderStatus::from($statusDto->status));
+    $order->setUpdatedAt(new \DateTimeImmutable());
+    $this->orderRepository->save($order, true);
+
+    return $this->serializeOrder($order, true);
   }
 
   private function serializeOrder(Order $order, bool $includeItems = false): array
