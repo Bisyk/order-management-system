@@ -61,7 +61,7 @@ class OrdersController
   }
 
   #[Route('/api/orders/{id}/status', name: 'app_api_orders_update_status', methods: ['PATCH'])]
-  public function update(int $id, #[MapRequestPayload()] UpdateStatusDto $statusDto): JsonResponse
+  public function updateStatus(int $id, #[MapRequestPayload()] UpdateStatusDto $statusDto): JsonResponse
   {
     $errors = $this->validator->validate($statusDto);
 
@@ -70,6 +70,24 @@ class OrdersController
     }
 
     $updatedOrder = $this->ordersService->updateStatus($id, $statusDto);
+
+    if (!$updatedOrder) {
+      return new JsonResponse(['message' => 'Order not found'], JsonResponse::HTTP_NOT_FOUND);
+    }
+
+    return new JsonResponse($updatedOrder, JsonResponse::HTTP_OK);
+  }
+
+  #[Route('/api/orders/{id}', name: 'app_api_orders_update', methods: ['PUT'])]
+  public function update(int $id, #[MapRequestPayload()] CreateOrderRequestDto $orderData): JsonResponse
+  {
+    $errors = $this->validator->validate($orderData);
+
+    if (count($errors) > 0) {
+      throw new ValidationFailedException($orderData, $errors);
+    }
+
+    $updatedOrder = $this->ordersService->update($id, $orderData);
 
     if (!$updatedOrder) {
       return new JsonResponse(['message' => 'Order not found'], JsonResponse::HTTP_NOT_FOUND);

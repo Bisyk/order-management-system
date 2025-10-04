@@ -25,7 +25,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/var/www/html
+      - .:/var/www/html:cached
+      - /var/www/html/vendor
     depends_on:
       database:
         condition: service_healthy
