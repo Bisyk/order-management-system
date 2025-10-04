@@ -25,13 +25,14 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/var/www/html
+      - .:/var/www/html:cached
+      - /var/www/html/vendor
     depends_on:
       database:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://order_user:secure_password123@database:5432/order_management?serverVersion=18&charset=utf8"
-    command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "public", "public/index.php"]
 
 volumes:
   ###> doctrine/doctrine-bundle ###
