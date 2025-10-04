@@ -7,6 +7,7 @@ use App\Entity\OrderItem;
 use App\Enum\OrderStatus;
 use App\Repository\OrderRepository;
 use App\DTO\CreateOrderRequestDto;
+use App\DTO\OrderFilterDto;
 use App\DTO\UpdateStatusDto;
 
 class OrdersService
@@ -28,13 +29,24 @@ class OrdersService
     $this->orderRepository->save($order, true);
   }
 
-  public function get(): array
+  public function get(OrderFilterDto $filters): array
   {
-    $orders = $this->orderRepository->findAll();
-    return array_map(
-      fn(Order $order) => $this->serializeOrder($order, false),
-      $orders
-    );
+    $result = $this->orderRepository->findWithFilters($filters);
+
+    return [
+      'data' => array_map(
+        fn(Order $order) => $this->serializeOrder($order, false),
+        $result['orders']
+      ),
+      'pagination' => [
+        'current_page' => $result['page'],
+        'per_page' => $result['limit'],
+        'total' => $result['total'],
+        'total_pages' => $result['total_pages'],
+        'has_next_page' => $result['page'] < $result['total_pages'],
+        'has_prev_page' => $result['page'] > 1
+      ]
+    ];
   }
 
   public function getById(int $id): ?array

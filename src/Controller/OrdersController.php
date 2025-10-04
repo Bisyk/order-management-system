@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Service\OrdersService;
 use App\DTO\CreateOrderRequestDto;
+use App\DTO\OrderFilterDto;
 use App\DTO\UpdateStatusDto;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
@@ -19,9 +21,15 @@ class OrdersController
   ) {}
 
   #[Route('/api/orders', name: 'app_api_orders_get', methods: ['GET'])]
-  public function index(): JsonResponse
+  public function index(#[MapQueryString()] OrderFilterDto $filters): JsonResponse
   {
-    $orders = $this->ordersService->get();
+    $errors = $this->validator->validate($filters);
+
+    if (count($errors) > 0) {
+      throw new ValidationFailedException($filters, $errors);
+    }
+
+    $orders = $this->ordersService->get($filters);
 
     return new JsonResponse($orders, JsonResponse::HTTP_OK);
   }
