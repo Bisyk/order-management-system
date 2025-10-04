@@ -9,11 +9,14 @@ use App\Repository\OrderRepository;
 use App\DTO\CreateOrderRequestDto;
 use App\DTO\OrderFilterDto;
 use App\DTO\UpdateStatusDto;
+use App\Message\OrderEmailNotificationMessage;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class OrdersService
 {
   public function __construct(
-    private readonly OrderRepository $orderRepository
+    private readonly OrderRepository $orderRepository,
+    private readonly MessageBusInterface $messageBus
   ) {}
 
   public function create(CreateOrderRequestDto $orderData): void
@@ -27,6 +30,8 @@ class OrdersService
     $this->populateOrderItems($order, $orderData->order_items);
 
     $this->orderRepository->save($order, true);
+
+    $this->dispatchEmailNotification($order, 'order_created');
   }
 
   public function get(OrderFilterDto $filters): array
@@ -77,9 +82,19 @@ class OrdersService
       return null;
     }
 
-    $order->setStatus(OrderStatus::from($statusDto->status));
+    $previousStatus = $order->getStatus();
+    $newStatus = OrderStatus::from($statusDto->status);
+    
+    $order->setStatus($newStatus);
     $order->setUpdatedAt(new \DateTimeImmutable());
     $this->orderRepository->save($order, true);
+
+    // Dispatch email notifications for status changes
+    if ($newStatus === OrderStatus::SHIPPED && $previousStatus !== OrderStatus::SHIPPED) {
+      $this->dispatchEmailNotification($order, 'order_shipped');
+    } elseif ($newStatus === OrderStatus::DELIVERED && $previousStatus !== OrderStatus::DELIVERED) {
+      $this->dispatchEmailNotification($order, 'order_delivered');
+    }
 
     return $this->serializeOrder($order, true);
   }
@@ -158,5 +173,26 @@ class OrdersService
       $orderItem->setPrice($itemData['price']);
       $order->addOrderItem($orderItem);
     }
+  }
+
+  private function dispatchEmailNotification(Order $order, string $notificationType): void
+  {
+    $orderData = [
+      'total_amount' => $order->getTotalAmount(),
+      'items' => array_map(
+        fn(OrderItem $item) => $this->serializeOrderItem($item),
+        $order->getOrderItems()->toArray()
+      )
+    ];
+
+    $message = new OrderEmailNotificationMessage(
+      $order->getId(),
+      $order->getCustomerEmail(),
+      $order->getCustomerName(),
+      $notificationType,
+      $orderData
+    );
+
+    $this->messageBus->dispatch($message);
   }
 }

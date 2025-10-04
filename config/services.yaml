@@ -23,3 +23,7 @@ services:
         tags: ['controller.service_arguments']
         public: true
         autowire: true
+    
+    App\MessageHandler\EmailNotificationHandler:
+        bind:
+            $senderEmail: '%env(MAILER_FROM_ADDRESS)%'
